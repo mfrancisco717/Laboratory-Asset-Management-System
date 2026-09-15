@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Borrowing Requests</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+<header class="topbar">
+    <h2>Laboratory Asset Management System</h2>
+    <button id="logoutBtn">Logout</button>
+</header>
+
+<div class="layout">
+
+<aside class="sidebar">
+    <a href="dashboard.html">Dashboard</a>
+    <a href="equipment.html">Equipment</a>
+    <a href="borrowing.html">Borrowing Requests</a>
+    <a href="approval.html">Approval</a>
+    <a href="returns.html">Returns</a>
+    <a href="maintenance.html">Maintenance</a>
+    <a href="users.html">Users</a>
+    <a href="reports.html">Reports</a>
+    <a href="audit-logs.html">Audit Logs</a>
+</aside>
+
+<main class="content">
+
+<h1>Borrowing Requests</h1>
+
+<form id="borrowForm">
+
+    <label>Equipment</label>
+    <select id="equipmentId" required>
+        <option value="">Select Equipment</option>
+    </select>
+
+    <label>Quantity</label>
+    <input type="number" id="quantity" min="1" value="1" required>
+
+    <label>Purpose</label>
+    <textarea id="purpose" required></textarea>
+
+    <label>Expected Return Date</label>
+    <input type="date" id="returnDate" required>
+
+    <button type="submit">Submit Request</button>
+
+</form>
+
+<p id="borrowMessage"></p>
+
+<h2>My Requests</h2>
+
+<table>
+
+<thead>
+<tr>
+    <th>Equipment</th>
+    <th>Quantity</th>
+    <th>Purpose</th>
+    <th>Status</th>
+    <th>Date</th>
+</tr>
+</thead>
+
+<tbody id="requestTable"></tbody>
+
+</table>
+
+</main>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase.js"></script>
+<script src="js/logout.js"></script>
+<script src="js/borrowing.js"></script>
+
+</body>
+</html>

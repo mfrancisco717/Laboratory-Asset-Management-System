@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Laboratory Asset Management System</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+<header class="topbar">
+    <h2>Laboratory Asset Management System</h2>
+    <button id="logoutBtn">Logout</button>
+</header>
+
+<div class="layout">
+
+    <aside class="sidebar">
+
+        <a href="dashboard.html">Dashboard</a>
+        <a href="equipment.html">Equipment</a>
+        <a href="borrowing.html">Borrowing Requests</a>
+        <a href="approval.html" id="approvalLink">Approval</a>
+        <a href="returns.html">Returns</a>
+        <a href="maintenance.html">Maintenance</a>
+        <a href="users.html" id="usersLink">Users</a>
+        <a href="reports.html" id="reportsLink">Reports</a>
+        <a href="audit-logs.html" id="auditLink">Audit Logs</a>
+
+    </aside>
+
+    <main class="content">
+
+        <h1>Dashboard</h1>
+
+        <div class="dashboard-grid">
+
+            <div class="card">
+                <h3>Total Equipment</h3>
+                <p id="totalEquipment">0</p>
+            </div>
+
+            <div class="card">
+                <h3>Available</h3>
+                <p id="availableEquipment">0</p>
+            </div>
+
+            <div class="card">
+                <h3>Borrowed</h3>
+                <p id="borrowedEquipment">0</p>
+            </div>
+
+            <div class="card">
+                <h3>Pending Requests</h3>
+                <p id="pendingRequests">0</p>
+            </div>
+
+        </div>
+
+    </main>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase.js"></script>
+<script src="js/logout.js"></script>
+<script src="js/dashboard.js"></script>
+
+</body>
+</html>

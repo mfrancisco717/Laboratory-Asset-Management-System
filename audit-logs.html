@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audit Logs</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+<header class="topbar">
+    <h2>Laboratory Asset Management System</h2>
+    <button id="logoutBtn">Logout</button>
+</header>
+
+<div class="layout">
+
+<aside class="sidebar">
+    <a href="dashboard.html">Dashboard</a>
+    <a href="equipment.html">Equipment</a>
+    <a href="borrowing.html">Borrowing Requests</a>
+    <a href="approval.html">Approval</a>
+    <a href="returns.html">Returns</a>
+    <a href="maintenance.html">Maintenance</a>
+    <a href="users.html">Users</a>
+    <a href="reports.html">Reports</a>
+    <a href="audit-logs.html">Audit Logs</a>
+</aside>
+
+<main class="content">
+
+<h1>Audit Logs</h1>
+
+<table>
+
+<thead>
+<tr>
+    <th>User</th>
+    <th>Action</th>
+    <th>Module</th>
+    <th>Record ID</th>
+    <th>Description</th>
+    <th>Date</th>
+</tr>
+</thead>
+
+<tbody id="auditTable"></tbody>
+
+</table>
+
+</main>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase.js"></script>
+<script src="js/logout.js"></script>
+<script src="js/audit-logs.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>User Management</title>
+
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+<header class="topbar">
+
+    <h2>Laboratory Asset Management System</h2>
+
+    <button id="logoutBtn">Logout</button>
+
+</header>
+
+<div class="layout">
+
+<aside class="sidebar">
+
+    <a href="dashboard.html">Dashboard</a>
+    <a href="equipment.html">Equipment</a>
+    <a href="borrowing.html">Borrowing Requests</a>
+    <a href="approval.html">Approval</a>
+    <a href="returns.html">Returns</a>
+    <a href="maintenance.html">Maintenance</a>
+    <a href="users.html">Users</a>
+    <a href="reports.html">Reports</a>
+    <a href="audit-logs.html">Audit Logs</a>
+
+</aside>
+
+<main class="content">
+
+<h1>User Management</h1>
+
+<div class="card">
+
+    <h3>Add User Profile</h3>
+
+    <form id="userForm">
+
+        <label for="userId">
+            Supabase Auth User ID
+        </label>
+
+        <input
+            type="text"
+            id="userId"
+            placeholder="Enter Auth User UUID"
+            required
+        >
+
+        <label for="fullName">
+            Full Name
+        </label>
+
+        <input
+            type="text"
+            id="fullName"
+            placeholder="Enter full name"
+            required
+        >
+
+        <label for="email">
+            Email
+        </label>
+
+        <input
+            type="email"
+            id="email"
+            placeholder="Enter email"
+            required
+        >
+
+        <label for="role">
+            Role
+        </label>
+
+        <select id="role" required>
+
+            <option value="">
+                Select Role
+            </option>
+
+            <option value="Administrator">
+                Administrator
+            </option>
+
+            <option value="Laboratory Staff">
+                Laboratory Staff
+            </option>
+
+            <option value="Requester / Viewer">
+                Requester / Viewer
+            </option>
+
+        </select>
+
+        <button type="submit">
+            Add User
+        </button>
+
+        <p id="userMessage"></p>
+
+    </form>
+
+</div>
+
+<div class="card">
+
+    <h3>Registered Users</h3>
+
+    <table>
+
+        <thead>
+
+        <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Created</th>
+        </tr>
+
+        </thead>
+
+        <tbody id="usersTable"></tbody>
+
+    </table>
+
+</div>
+
+</main>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase.js"></script>
+<script src="js/logout.js"></script>
+<script src="js/users.js"></script>
+
+</body>
+
+</html>
