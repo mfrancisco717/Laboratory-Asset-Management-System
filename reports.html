@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reports</title>
+
+    <title>Reports | Laboratory Asset Management System</title>
+
     <link rel="stylesheet" href="css/style.css">
 </head>
 
@@ -11,49 +13,259 @@
 
 <header class="topbar">
     <h2>Laboratory Asset Management System</h2>
-    <button id="logoutBtn">Logout</button>
+    <button id="logoutBtn" type="button">Logout</button>
 </header>
 
 <div class="layout">
 
-<aside class="sidebar">
-    <a href="dashboard.html">Dashboard</a>
-    <a href="equipment.html">Equipment</a>
-    <a href="borrowing.html">Borrowing Requests</a>
-    <a href="approval.html">Approval</a>
-    <a href="returns.html">Returns</a>
-    <a href="maintenance.html">Maintenance</a>
-    <a href="users.html">Users</a>
-    <a href="reports.html">Reports</a>
-    <a href="audit-logs.html">Audit Logs</a>
-</aside>
+    <aside class="sidebar">
+        <a href="dashboard.html">Dashboard</a>
+        <a href="equipment.html">Equipment</a>
+        <a href="borrowing.html">Borrowing Requests</a>
+        <a href="approval.html">Approval</a>
+        <a href="returns.html">Returns</a>
+        <a href="maintenance.html">Maintenance</a>
+        <a href="users.html">Users</a>
+        <a href="reports.html" aria-current="page">Reports</a>
+        <a href="audit-logs.html">Audit Logs</a>
+    </aside>
 
-<main class="content">
+    <main class="content reports-page">
 
-<h1>Reports</h1>
+        <div class="report-heading">
+            <div>
+                <p class="report-eyebrow">ASSET MANAGEMENT</p>
+                <h1>Reports & Analytics</h1>
+                <p class="report-description">
+                    Monitor laboratory equipment, borrowing transactions,
+                    and maintenance activities in one place.
+                </p>
+            </div>
 
-<div class="card">
-    <h3>Equipment Report</h3>
-    <p>View the current status of laboratory equipment.</p>
-</div>
+            <div class="report-actions">
+                <button type="button" id="refreshReportsBtn">
+                    Refresh Data
+                </button>
+                <button type="button" id="printReportsBtn" class="secondary-button">
+                    Print / Save PDF
+                </button>
+            </div>
+        </div>
 
-<div class="card">
-    <h3>Borrowing Report</h3>
-    <p>View borrowing request transactions and statuses.</p>
-</div>
+        <div id="reportMessage" class="report-message" role="status"
+             aria-live="polite"></div>
 
-<div class="card">
-    <h3>Maintenance Report</h3>
-    <p>View maintenance requests and equipment issues.</p>
-</div>
+        <section class="report-summary" aria-label="Report summary">
 
-</main>
+            <article class="report-stat">
+                <div class="stat-top">
+                    <span>Total Equipment</span>
+                    <span class="stat-symbol">EQ</span>
+                </div>
+                <h2 id="totalEquipment">—</h2>
+                <p>Registered equipment items</p>
+            </article>
 
+            <article class="report-stat">
+                <div class="stat-top">
+                    <span>Available Units</span>
+                    <span class="stat-symbol green-symbol">AV</span>
+                </div>
+                <h2 id="availableEquipment">—</h2>
+                <p>Units in available equipment records</p>
+            </article>
+
+            <article class="report-stat">
+                <div class="stat-top">
+                    <span>Borrowed Units</span>
+                    <span class="stat-symbol orange-symbol">BR</span>
+                </div>
+                <h2 id="borrowedEquipment">—</h2>
+                <p>Units in borrowed equipment records</p>
+            </article>
+
+            <article class="report-stat">
+                <div class="stat-top">
+                    <span>Pending Requests</span>
+                    <span class="stat-symbol blue-symbol">PR</span>
+                </div>
+                <h2 id="pendingRequests">—</h2>
+                <p>Requests awaiting approval</p>
+            </article>
+
+        </section>
+
+        <section class="report-panel">
+            <div class="report-panel-heading">
+                <div>
+                    <h2>Equipment Report</h2>
+                    <p>Equipment inventory and current status.</p>
+                </div>
+
+                <button type="button" class="secondary-button"
+                        id="exportEquipmentBtn">
+                    Export CSV
+                </button>
+            </div>
+
+            <div class="report-filters">
+                <input type="search" id="equipmentSearch"
+                       placeholder="Search code, name, or laboratory..."
+                       aria-label="Search equipment">
+
+                <select id="equipmentStatusFilter"
+                        aria-label="Filter equipment by status">
+                    <option value="">All Equipment Statuses</option>
+                    <option value="Available">Available</option>
+                    <option value="Borrowed">Borrowed</option>
+                    <option value="Maintenance">Maintenance</option>
+                    <option value="Damaged">Damaged</option>
+                    <option value="Unserviceable">Unserviceable</option>
+                </select>
+            </div>
+
+            <div class="report-table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Equipment Code</th>
+                            <th>Equipment Name</th>
+                            <th>Category</th>
+                            <th>Laboratory</th>
+                            <th>Quantity</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="equipmentReportTable">
+                        <tr>
+                            <td colspan="6">Loading equipment report...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p class="report-count" id="equipmentCount">Loading records...</p>
+        </section>
+
+        <section class="report-panel">
+            <div class="report-panel-heading">
+                <div>
+                    <h2>Borrowing Report</h2>
+                    <p>Borrowing requests, responsible users, and transaction statuses.</p>
+                </div>
+
+                <button type="button" class="secondary-button"
+                        id="exportBorrowingBtn">
+                    Export CSV
+                </button>
+            </div>
+
+            <div class="report-filters">
+                <input type="search" id="borrowingSearch"
+                       placeholder="Search requester, equipment, or purpose..."
+                       aria-label="Search borrowing requests">
+
+                <select id="borrowingStatusFilter"
+                        aria-label="Filter borrowing requests by status">
+                    <option value="">All Request Statuses</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Approved">Approved</option>
+                    <option value="Rejected">Rejected</option>
+                    <option value="Released">Released</option>
+                    <option value="Returned">Returned</option>
+                    <option value="Overdue">Overdue</option>
+                    <option value="Closed">Closed</option>
+                </select>
+            </div>
+
+            <div class="report-table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Request ID</th>
+                            <th>Requester</th>
+                            <th>Equipment</th>
+                            <th>Quantity</th>
+                            <th>Purpose</th>
+                            <th>Request Date</th>
+                            <th>Expected Return</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="borrowingReportTable">
+                        <tr>
+                            <td colspan="8">Loading borrowing report...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p class="report-count" id="borrowingCount">Loading records...</p>
+        </section>
+
+        <section class="report-panel">
+            <div class="report-panel-heading">
+                <div>
+                    <h2>Maintenance Report</h2>
+                    <p>Maintenance requests and reported equipment issues.</p>
+                </div>
+
+                <button type="button" class="secondary-button"
+                        id="exportMaintenanceBtn">
+                    Export CSV
+                </button>
+            </div>
+
+            <div class="report-filters">
+                <input type="search" id="maintenanceSearch"
+                       placeholder="Search equipment or problem..."
+                       aria-label="Search maintenance requests">
+
+                <select id="maintenanceStatusFilter"
+                        aria-label="Filter maintenance requests by status">
+                    <option value="">All Maintenance Statuses</option>
+                    <option value="Pending">Pending</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Cancelled">Cancelled</option>
+                </select>
+            </div>
+
+            <div class="report-table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Request ID</th>
+                            <th>Equipment</th>
+                            <th>Reported Problem</th>
+                            <th>Requested By</th>
+                            <th>Date Reported</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="maintenanceReportTable">
+                        <tr>
+                            <td colspan="6">Loading maintenance report...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p class="report-count" id="maintenanceCount">Loading records...</p>
+        </section>
+
+        <p class="report-footer">
+            Laboratory Asset Management System · Reports are based on
+            records accessible to the signed-in Administrator.
+        </p>
+
+    </main>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="js/supabase.js"></script>
 <script src="js/logout.js"></script>
+<script src="js/reports.js"></script>
 
 </body>
 </html>

@@ -109,3 +109,57 @@ Borrowing Request Submitted
    Returned
       ↓
     Closed
+
+    ## 7. Entity Relationship Diagram (ERD)
+
+The ERD shows the database entities and their relationships used in the system.
+
+![Entity Relationship Diagram](documentation/erd.png)
+
+### Main Entities
+
+- **PROFILES** – stores user information and roles.
+- **EQUIPMENT** – stores laboratory equipment information.
+- **BORROWING_REQUESTS** – stores borrowing transactions and approval details.
+- **MAINTENANCE_REQUESTS** – stores equipment maintenance requests.
+- **AUDIT_LOGS** – records important system activities.
+
+### Main Relationships
+
+- One Profile can create many Borrowing Requests.
+- One Equipment can have many Borrowing Requests.
+- One Profile can create many Maintenance Requests.
+- One Equipment can have many Maintenance Requests.
+- One Profile can have many Audit Logs.
+
+---
+
+## 8. Use Case Diagram
+
+The Use Case Diagram shows the interaction between the three user roles and the system.
+
+![Use Case Diagram](documentation/use-case-diagram.png)
+
+### Actors
+
+**Administrator**
+- Manage Users
+- Manage Equipment
+- Approve Requests
+- Reject Requests
+- Manage Maintenance
+- View Reports
+- View Audit Logs
+
+**Laboratory Staff**
+- View Equipment
+- Create Borrowing Transactions
+- Process Returns
+- Submit Maintenance Requests
+- Update Permitted Records
+
+**Requester / Viewer**
+- View Available Equipment
+- Submit Borrowing Requests
+- View Own Request Status
+- View Own Request History

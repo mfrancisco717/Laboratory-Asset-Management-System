@@ -1,58 +1,422 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Maintenance</title>
+
+    <title>Maintenance Management | Laboratory Asset Management System</title>
+
     <link rel="stylesheet" href="css/style.css">
+
+    <style>
+        .maintenance-page {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .maintenance-intro {
+            color: #6b7280;
+            margin: 8px 0 24px;
+        }
+
+        .maintenance-card {
+            background: #fff;
+            border: 1px solid #e5e1ed;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .maintenance-card h2 {
+            color: #493477;
+            margin-top: 0;
+            margin-bottom: 8px;
+        }
+
+        .maintenance-card p {
+            color: #6b7280;
+        }
+
+        .maintenance-form {
+            display: grid;
+            gap: 12px;
+            max-width: 760px;
+        }
+
+        .maintenance-form label {
+            font-weight: 600;
+            margin-top: 8px;
+        }
+
+        .maintenance-form input,
+        .maintenance-form select,
+        .maintenance-form textarea,
+        .maintenance-toolbar input,
+        .maintenance-toolbar select {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 12px;
+            border: 1px solid #d8d2e5;
+            border-radius: 8px;
+            font: inherit;
+        }
+
+        .maintenance-form textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .maintenance-button {
+            border: 0;
+            border-radius: 8px;
+            padding: 11px 16px;
+            background: #5b3f8c;
+            color: #fff;
+            font: inherit;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .maintenance-button:hover {
+            background: #493477;
+        }
+
+        .maintenance-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .maintenance-button.secondary {
+            background: #eee8f7;
+            color: #493477;
+        }
+
+        .maintenance-button.secondary:hover {
+            background: #e1d7f0;
+        }
+
+        .maintenance-toolbar {
+            display: grid;
+            grid-template-columns: minmax(220px, 1fr) minmax(180px, 240px);
+            gap: 12px;
+            margin: 18px 0;
+        }
+
+        .maintenance-table-wrap {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .maintenance-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 900px;
+        }
+
+        .maintenance-table th,
+        .maintenance-table td {
+            padding: 14px 12px;
+            text-align: left;
+            border-bottom: 1px solid #e9e5ef;
+            vertical-align: top;
+        }
+
+        .maintenance-table th {
+            background: #f0ebf7;
+            color: #493477;
+            font-weight: 700;
+        }
+
+        .maintenance-table tbody tr:hover {
+            background: #faf9fc;
+        }
+
+        .maintenance-status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 7px;
+            font-size: 13px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .maintenance-status.pending {
+            color: #9a6200;
+            background: #fff3d8;
+        }
+
+        .maintenance-status.in-progress {
+            color: #245ba8;
+            background: #e8f2ff;
+        }
+
+        .maintenance-status.completed {
+            color: #187347;
+            background: #e4f5ea;
+        }
+
+        .maintenance-status.cancelled {
+            color: #b42318;
+            background: #fde9e7;
+        }
+
+        .maintenance-message {
+            display: none;
+            padding: 13px 16px;
+            margin: 16px 0;
+            border-radius: 8px;
+            line-height: 1.5;
+            overflow-wrap: anywhere;
+        }
+
+        .maintenance-message.visible {
+            display: block;
+        }
+
+        .maintenance-message.success {
+            color: #17663f;
+            background: #e4f5ea;
+        }
+
+        .maintenance-message.error {
+            color: #a32222;
+            background: #fde9e7;
+        }
+
+        .maintenance-message.info {
+            color: #245ba8;
+            background: #e8f2ff;
+        }
+
+        .maintenance-action {
+            display: grid;
+            gap: 8px;
+            min-width: 150px;
+        }
+
+        .maintenance-action select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #d8d2e5;
+            border-radius: 7px;
+        }
+
+        .maintenance-count {
+            color: #6b7280;
+            font-size: 14px;
+            margin-top: 14px;
+        }
+
+        .maintenance-role {
+            display: inline-block;
+            background: #eee8f7;
+            color: #493477;
+            padding: 5px 10px;
+            border-radius: 7px;
+            font-weight: 700;
+            font-size: 13px;
+        }
+
+        @media (max-width: 700px) {
+            .maintenance-card {
+                padding: 16px;
+            }
+
+            .maintenance-toolbar {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media print {
+            .topbar,
+            .sidebar,
+            #maintenanceFormCard,
+            .maintenance-toolbar,
+            .maintenance-action,
+            #refreshMaintenanceBtn {
+                display: none !important;
+            }
+
+            .layout {
+                display: block !important;
+            }
+
+            .content,
+            .maintenance-card {
+                margin: 0 !important;
+                padding: 10px !important;
+                border: 0 !important;
+            }
+
+            .maintenance-table {
+                min-width: 0;
+                font-size: 10px;
+            }
+        }
+    </style>
 </head>
 
 <body>
 
 <header class="topbar">
     <h2>Laboratory Asset Management System</h2>
-    <button id="logoutBtn">Logout</button>
+    <button id="logoutBtn" type="button">Logout</button>
 </header>
 
 <div class="layout">
 
-<aside class="sidebar">
-    <a href="dashboard.html">Dashboard</a>
-    <a href="equipment.html">Equipment</a>
-    <a href="borrowing.html">Borrowing Requests</a>
-    <a href="approval.html">Approval</a>
-    <a href="returns.html">Returns</a>
-    <a href="maintenance.html">Maintenance</a>
-    <a href="users.html">Users</a>
-    <a href="reports.html">Reports</a>
-    <a href="audit-logs.html">Audit Logs</a>
-</aside>
+    <aside class="sidebar">
+        <a href="dashboard.html">Dashboard</a>
+        <a href="equipment.html">Equipment</a>
+        <a href="borrowing.html">Borrowing Requests</a>
+        <a href="approval.html">Approval</a>
+        <a href="returns.html">Returns</a>
+        <a href="maintenance.html">Maintenance</a>
+        <a href="users.html">Users</a>
+        <a href="reports.html">Reports</a>
+        <a href="audit-logs.html">Audit Logs</a>
+    </aside>
 
-<main class="content">
+    <main class="content maintenance-page">
 
-<h1>Maintenance Requests</h1>
+        <h1>Maintenance Management</h1>
 
-<form id="maintenanceForm">
+        <p class="maintenance-intro">
+            Report equipment problems, monitor maintenance progress,
+            and manage laboratory equipment servicing.
+        </p>
 
-    <label>Equipment</label>
+        <div id="maintenanceMessage"
+             class="maintenance-message"
+             role="status"
+             aria-live="polite"></div>
 
-    <select id="maintenanceEquipment" required>
-        <option value="">Select Equipment</option>
-    </select>
+        <section class="maintenance-card">
+            <h2>Account Information</h2>
 
-    <label>Problem Description</label>
+            <p>
+                Signed in as:
+                <strong id="maintenanceUserName">Loading...</strong>
+            </p>
 
-    <textarea id="problemDescription" required></textarea>
+            <p>
+                Role:
+                <span id="maintenanceUserRole" class="maintenance-role">
+                    Loading...
+                </span>
+            </p>
+        </section>
 
-    <button type="submit">
-        Submit Maintenance Request
-    </button>
+        <section class="maintenance-card" id="maintenanceFormCard">
+            <h2>Submit Maintenance Request</h2>
 
-</form>
+            <p>
+                Use this form to report broken, damaged, malfunctioning,
+                or equipment that needs inspection or servicing.
+            </p>
 
-<p id="maintenanceMessage"></p>
+            <form id="maintenanceForm" class="maintenance-form">
 
-</main>
+                <label for="maintenanceEquipment">
+                    Equipment
+                </label>
+
+                <select id="maintenanceEquipment" required>
+                    <option value="">Loading equipment...</option>
+                </select>
+
+                <label for="problemDescription">
+                    Problem Description
+                </label>
+
+                <textarea
+                    id="problemDescription"
+                    maxlength="2000"
+                    placeholder="Describe the equipment problem, damage, or service needed..."
+                    required
+                ></textarea>
+
+                <button
+                    type="submit"
+                    class="maintenance-button"
+                    id="submitMaintenanceBtn"
+                >
+                    Submit Maintenance Request
+                </button>
+
+            </form>
+        </section>
+
+        <section class="maintenance-card">
+            <h2>Maintenance Records</h2>
+
+            <p>
+                Requesters can view their own records.
+                Laboratory Staff and Administrators can view records
+                available to their roles and permissions.
+            </p>
+
+            <div class="maintenance-toolbar">
+
+                <input
+                    type="search"
+                    id="maintenanceSearch"
+                    placeholder="Search equipment, requester, or problem..."
+                    aria-label="Search maintenance records"
+                >
+
+                <select
+                    id="maintenanceStatusFilter"
+                    aria-label="Filter by maintenance status"
+                >
+                    <option value="">All Statuses</option>
+                    <option value="Pending">Pending</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Cancelled">Cancelled</option>
+                </select>
+
+            </div>
+
+            <button
+                type="button"
+                id="refreshMaintenanceBtn"
+                class="maintenance-button secondary"
+            >
+                Refresh Records
+            </button>
+
+            <div class="maintenance-table-wrap">
+                <table class="maintenance-table">
+
+                    <thead>
+                        <tr>
+                            <th>Request ID</th>
+                            <th>Equipment</th>
+                            <th>Problem Description</th>
+                            <th>Requested By</th>
+                            <th>Date Reported</th>
+                            <th>Status</th>
+                            <th id="maintenanceActionHeading">Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="maintenanceTable">
+                        <tr>
+                            <td colspan="7">Loading maintenance records...</td>
+                        </tr>
+                    </tbody>
+
+                </table>
+            </div>
+
+            <p id="maintenanceCount" class="maintenance-count">
+                Loading records...
+            </p>
+        </section>
+
+    </main>
 
 </div>
 

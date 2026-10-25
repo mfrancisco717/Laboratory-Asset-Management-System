@@ -1,8 +1,9 @@
 let adminUser = null;
 let adminProfile = null;
+let processingRequests = new Set();
 
+// Check whether the current user is an Administrator
 async function checkAdmin() {
-
     const {
         data: { user },
         error: userError
@@ -13,39 +14,29 @@ async function checkAdmin() {
         return;
     }
 
-    const {
-        data: profile,
-        error: profileError
-    } = await supabaseClient
-        .from("profiles")
-        .select("id, full_name, email, role")
-        .eq("id", user.id)
-        .single();
+    const { data: profile, error: profileError } =
+        await supabaseClient
+            .from("profiles")
+            .select("id, full_name, email, role")
+            .eq("id", user.id)
+            .single();
 
-    if (profileError) {
-
+    if (profileError || !profile) {
         console.error("Profile error:", profileError);
 
-        document.querySelector("main").innerHTML = `
-            <div class="access-denied">
-                <h1>Unable to Verify Role</h1>
-                <p>There was a problem checking your account role.</p>
-                <p>${profileError.message}</p>
-            </div>
-        `;
-
+        showAccessMessage(
+            "Unable to Verify Role",
+            profileError?.message ||
+                "Your profile could not be found."
+        );
         return;
     }
 
-    if (!profile || profile.role !== "Administrator") {
-
-        document.querySelector("main").innerHTML = `
-            <div class="access-denied">
-                <h1>Access Denied</h1>
-                <p>Only Administrators can access this page.</p>
-            </div>
-        `;
-
+    if (profile.role !== "Administrator") {
+        showAccessMessage(
+            "Access Denied",
+            "Only Administrators can access this page."
+        );
         return;
     }
 
@@ -55,26 +46,77 @@ async function checkAdmin() {
     await loadPendingRequests();
 }
 
+function showAccessMessage(title, description) {
+    const main = document.querySelector("main");
+    if (!main) return;
+
+    main.replaceChildren();
+
+    const container = document.createElement("div");
+    container.className = "access-denied";
+
+    const heading = document.createElement("h1");
+    heading.textContent = title;
+
+    const paragraph = document.createElement("p");
+    paragraph.textContent = description;
+
+    container.append(heading, paragraph);
+    main.appendChild(container);
+}
+
+function createCell(value) {
+    const cell = document.createElement("td");
+
+    cell.textContent =
+        value === null || value === undefined || value === ""
+            ? "—"
+            : String(value);
+
+    return cell;
+}
+
+function showApprovalMessage(message, isError = false) {
+    const element = document.getElementById("approvalMessage");
+    if (!element) return;
+
+    element.textContent = message;
+    element.classList.toggle("error-message", isError);
+}
+
+function setApprovalTableMessage(message) {
+    const table = document.getElementById("approvalTable");
+    if (!table) return;
+
+    table.replaceChildren();
+
+    const row = document.createElement("tr");
+    const cell = createCell(message);
+
+    cell.colSpan = 6;
+    row.appendChild(cell);
+    table.appendChild(row);
+}
+
+// Load pending borrowing requests
 async function loadPendingRequests() {
+    const table = document.getElementById("approvalTable");
 
-    const table =
-        document.getElementById("approvalTable");
+    if (!table) {
+        console.error("Approval table was not found.");
+        return;
+    }
 
-    const message =
-        document.getElementById("approvalMessage");
+    showApprovalMessage("");
+    setApprovalTableMessage("Loading pending requests...");
 
-    table.innerHTML = `
-        <tr>
-            <td colspan="6">Loading pending requests...</td>
-        </tr>
-    `;
-
-    const { data, error } =
-        await supabaseClient
+    try {
+        const { data: requests, error } = await supabaseClient
             .from("borrowing_requests")
             .select(`
                 id,
                 requester_id,
+                equipment_id,
                 quantity,
                 purpose,
                 status,
@@ -82,272 +124,312 @@ async function loadPendingRequests() {
                 equipment (
                     equipment_code,
                     equipment_name
-                ),
-                profiles!borrowing_requests_requester_id_fkey (
-                    full_name
                 )
             `)
             .eq("status", "Pending")
             .order("id", { ascending: false });
 
-    if (error) {
+        if (error) throw error;
 
-        console.error("Loading requests error:", error);
+        if (!requests || requests.length === 0) {
+            setApprovalTableMessage(
+                "No pending borrowing requests."
+            );
+            return;
+        }
 
-        table.innerHTML = `
-            <tr>
-                <td colspan="6">
-                    Unable to load borrowing requests.
-                </td>
-            </tr>
-        `;
+        // Retrieve requester profiles through the secure function.
+        const requesterIds = [
+            ...new Set(
+                requests
+                    .map(request => request.requester_id)
+                    .filter(Boolean)
+            )
+        ];
 
-        message.textContent =
-            "Error: " + error.message;
+        let profilesById = new Map();
 
-        return;
+        if (requesterIds.length > 0) {
+            const { data: profiles, error: profileError } =
+                await supabaseClient.rpc(
+                    "get_maintenance_requester_profiles",
+                    {
+                        requester_ids: requesterIds
+                    }
+                );
+
+            if (profileError) {
+                console.error(
+                    "Requester profile loading error:",
+                    profileError
+                );
+
+                showApprovalMessage(
+                    "Requests loaded, but requester names could not be retrieved: " +
+                        profileError.message,
+                    true
+                );
+            } else {
+                profilesById = new Map(
+                    (profiles || []).map(profile => [
+                        profile.id,
+                        profile
+                    ])
+                );
+            }
+        }
+
+        table.replaceChildren();
+
+        requests.forEach(request => {
+            const row = document.createElement("tr");
+            const requester = profilesById.get(
+                request.requester_id
+            );
+
+            const requesterName = requester
+                ? requester.full_name ||
+                    requester.email ||
+                    "Name not set"
+                : "Profile unavailable";
+
+            const equipment = request.equipment || {};
+
+            const equipmentName = [
+                equipment.equipment_code,
+                equipment.equipment_name
+            ].filter(Boolean).join(" - ") || "Unknown Equipment";
+
+            row.appendChild(createCell(requesterName));
+            row.appendChild(createCell(equipmentName));
+            row.appendChild(createCell(request.quantity));
+            row.appendChild(createCell(request.purpose));
+
+            const statusCell = document.createElement("td");
+            const statusBadge = document.createElement("span");
+
+            statusBadge.className = "status-pending";
+            statusBadge.textContent = request.status;
+
+            statusCell.appendChild(statusBadge);
+            row.appendChild(statusCell);
+
+            const actionCell = document.createElement("td");
+
+            if (request.requester_id === adminUser.id) {
+                actionCell.textContent = "Own Request";
+            } else {
+                const approveButton =
+                    document.createElement("button");
+
+                approveButton.type = "button";
+                approveButton.textContent = "Approve";
+                approveButton.addEventListener("click", () => {
+                    processBorrowingRequest(
+                        request.id,
+                        "Approved",
+                        approveButton
+                    );
+                });
+
+                const rejectButton =
+                    document.createElement("button");
+
+                rejectButton.type = "button";
+                rejectButton.textContent = "Reject";
+                rejectButton.addEventListener("click", () => {
+                    processBorrowingRequest(
+                        request.id,
+                        "Rejected",
+                        rejectButton
+                    );
+                });
+
+                actionCell.append(
+                    approveButton,
+                    document.createTextNode(" "),
+                    rejectButton
+                );
+            }
+
+            row.appendChild(actionCell);
+            table.appendChild(row);
+        });
+    } catch (error) {
+        console.error("Loading approval requests failed:", error);
+
+        setApprovalTableMessage(
+            "Unable to load pending borrowing requests."
+        );
+
+        showApprovalMessage(
+            "Error loading requests: " + error.message,
+            true
+        );
     }
-
-    table.innerHTML = "";
-
-    if (!data || data.length === 0) {
-
-        table.innerHTML = `
-            <tr>
-                <td colspan="6">
-                    No pending borrowing requests.
-                </td>
-            </tr>
-        `;
-
-        return;
-    }
-
-    data.forEach(request => {
-
-        const row =
-            document.createElement("tr");
-
-        const requesterName =
-            request.profiles
-                ? request.profiles.full_name
-                : "Unknown Requester";
-
-        const equipmentName =
-            request.equipment
-                ? request.equipment.equipment_code +
-                  " - " +
-                  request.equipment.equipment_name
-                : "Unknown Equipment";
-
-        row.innerHTML = `
-            <td>${requesterName}</td>
-
-            <td>${equipmentName}</td>
-
-            <td>${request.quantity}</td>
-
-            <td>${request.purpose}</td>
-
-            <td>
-                <span class="status-pending">
-                    ${request.status}
-                </span>
-            </td>
-
-            <td>
-                ${
-                    request.requester_id === adminUser.id
-                    ? `<span>Own Request</span>`
-                    : `
-                        <button onclick="approveRequest(${request.id})">
-                            Approve
-                        </button>
-
-                        <button onclick="rejectRequest(${request.id})">
-                            Reject
-                        </button>
-                    `
-                }
-            </td>
-        `;
-
-        table.appendChild(row);
-    });
 }
 
-async function approveRequest(requestId) {
-
-    const message =
-        document.getElementById("approvalMessage");
-
-    const {
-        data: request,
-        error: requestError
-    } = await supabaseClient
-        .from("borrowing_requests")
-        .select("id, requester_id, status")
-        .eq("id", requestId)
-        .single();
-
-    if (requestError || !request) {
-
-        message.textContent =
-            "Unable to find the borrowing request.";
-
+// Approve or reject a pending borrowing request
+async function processBorrowingRequest(
+    requestId,
+    newStatus,
+    clickedButton
+) {
+    if (!adminUser || !adminProfile) {
+        showApprovalMessage(
+            "Your Administrator account has not been verified.",
+            true
+        );
         return;
     }
 
-    if (request.requester_id === adminUser.id) {
-
-        message.textContent =
-            "You cannot approve your own request.";
-
+    if (!["Approved", "Rejected"].includes(newStatus)) {
+        showApprovalMessage("Invalid request status.", true);
         return;
     }
 
-    if (request.status !== "Pending") {
+    if (processingRequests.has(requestId)) return;
 
-        message.textContent =
-            "Only pending requests can be approved.";
+    const confirmed = window.confirm(
+        `${newStatus === "Approved" ? "Approve" : "Reject"} ` +
+        `borrowing request #${requestId}?`
+    );
 
-        return;
-    }
+    if (!confirmed) return;
 
-    const { error } =
-        await supabaseClient
-            .from("borrowing_requests")
-            .update({
-                status: "Approved",
-                approved_by: adminUser.id,
-                approved_at: new Date().toISOString()
-            })
-            .eq("id", requestId)
-            .eq("status", "Pending");
+    processingRequests.add(requestId);
 
-    if (error) {
+    const originalText = clickedButton.textContent;
+    clickedButton.disabled = true;
+    clickedButton.textContent = "Processing...";
 
-        console.error("Approval error:", error);
+    try {
+        // Read the latest request status before updating.
+        const { data: request, error: requestError } =
+            await supabaseClient
+                .from("borrowing_requests")
+                .select("id, requester_id, status")
+                .eq("id", requestId)
+                .single();
 
-        message.textContent =
-            "Approval failed: " + error.message;
+        if (requestError || !request) {
+            throw requestError ||
+                new Error("Borrowing request not found.");
+        }
 
-        return;
-    }
+        if (request.requester_id === adminUser.id) {
+            throw new Error(
+                "You cannot approve or reject your own request."
+            );
+        }
 
-    const { error: auditError } =
-        await supabaseClient
+        if (request.status !== "Pending") {
+            showApprovalMessage(
+                "This request is no longer pending. The list will refresh.",
+                true
+            );
+
+            await loadPendingRequests();
+            return;
+        }
+
+        // Update only if the request is still Pending.
+        const { data: updatedRequest, error: updateError } =
+            await supabaseClient
+                .from("borrowing_requests")
+                .update({
+                    status: newStatus,
+                    approved_by: adminUser.id,
+                    approved_at: new Date().toISOString()
+                })
+                .eq("id", requestId)
+                .eq("status", "Pending")
+                .select("id, status")
+                .maybeSingle();
+
+        if (updateError) throw updateError;
+
+        if (!updatedRequest) {
+            showApprovalMessage(
+                "No update was made. The request may have changed, or your database permissions may not allow this action.",
+                true
+            );
+
+            await loadPendingRequests();
+            return;
+        }
+
+        // Record the decision in audit logs.
+        const { error: auditError } = await supabaseClient
             .from("audit_logs")
             .insert({
                 user_id: adminUser.id,
-                action: "APPROVED",
+                action: newStatus.toUpperCase(),
                 module: "Borrowing",
                 record_id: requestId,
                 description:
-                    "Approved borrowing request."
+                    `${newStatus} borrowing request #${requestId}.`
             });
 
-    if (auditError) {
+        if (auditError) {
+            console.error("Audit log error:", auditError);
 
-        console.error("Audit log error:", auditError);
+            showApprovalMessage(
+                `Request #${requestId} was ${newStatus.toLowerCase()}, but its audit log could not be saved: ${auditError.message}`,
+                true
+            );
+        } else {
+            showApprovalMessage(
+                `Borrowing request #${requestId} ${newStatus.toLowerCase()} successfully.`,
+                false
+            );
+        }
 
-        message.textContent =
-            "Request approved, but audit log failed.";
+        // The request disappears from this page because it is no
+        // longer Pending. It remains in the Borrowing Report.
+        await loadPendingRequests();
 
-    } else {
+    } catch (error) {
+        console.error("Borrowing decision failed:", error);
 
-        message.textContent =
-            "Borrowing request approved successfully.";
+        showApprovalMessage(
+            "Unable to process request: " + error.message,
+            true
+        );
+    } finally {
+        processingRequests.delete(requestId);
+        clickedButton.disabled = false;
+        clickedButton.textContent = originalText;
     }
+}
 
-    await loadPendingRequests();
+// Keep compatibility with existing HTML onclick handlers, if any.
+async function approveRequest(requestId) {
+    const button = document.querySelector(
+        `#approvalTable button[data-request-id="${requestId}"][data-status="Approved"]`
+    );
+
+    if (button) {
+        await processBorrowingRequest(
+            requestId,
+            "Approved",
+            button
+        );
+    }
 }
 
 async function rejectRequest(requestId) {
+    const button = document.querySelector(
+        `#approvalTable button[data-request-id="${requestId}"][data-status="Rejected"]`
+    );
 
-    const message =
-        document.getElementById("approvalMessage");
-
-    const {
-        data: request,
-        error: requestError
-    } = await supabaseClient
-        .from("borrowing_requests")
-        .select("id, requester_id, status")
-        .eq("id", requestId)
-        .single();
-
-    if (requestError || !request) {
-
-        message.textContent =
-            "Unable to find the borrowing request.";
-
-        return;
+    if (button) {
+        await processBorrowingRequest(
+            requestId,
+            "Rejected",
+            button
+        );
     }
-
-    if (request.requester_id === adminUser.id) {
-
-        message.textContent =
-            "You cannot reject your own request.";
-
-        return;
-    }
-
-    if (request.status !== "Pending") {
-
-        message.textContent =
-            "Only pending requests can be rejected.";
-
-        return;
-    }
-
-    const { error } =
-        await supabaseClient
-            .from("borrowing_requests")
-            .update({
-                status: "Rejected",
-                approved_by: adminUser.id,
-                approved_at: new Date().toISOString()
-            })
-            .eq("id", requestId)
-            .eq("status", "Pending");
-
-    if (error) {
-
-        console.error("Rejection error:", error);
-
-        message.textContent =
-            "Rejection failed: " + error.message;
-
-        return;
-    }
-
-    const { error: auditError } =
-        await supabaseClient
-            .from("audit_logs")
-            .insert({
-                user_id: adminUser.id,
-                action: "REJECTED",
-                module: "Borrowing",
-                record_id: requestId,
-                description:
-                    "Rejected borrowing request."
-            });
-
-    if (auditError) {
-
-        console.error("Audit log error:", auditError);
-
-        message.textContent =
-            "Request rejected, but audit log failed.";
-
-    } else {
-
-        message.textContent =
-            "Borrowing request rejected successfully.";
-    }
-
-    await loadPendingRequests();
 }
 
 checkAdmin();
